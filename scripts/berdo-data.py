@@ -71,17 +71,18 @@ def calc_building_type_allocation(df):
     summary_df = df.groupby('BERDO Property Type').agg(
         total_count=('BERDO ID', 'count'),
         total_gfa=('Reported Gross Floor Area (Sq Ft)', 'sum'),
-        total_ghg = ('Reported Gross Floor Area (Sq Ft)', 'sum')
+        total_ghg = ('Total GHG Emissions (MT CO2e)', 'sum')
     ).reset_index()
 
     # Calculate overall totals for all building types
     total_buildings = df['BERDO ID'].count()
     total_floor_area = df['Reported Gross Floor Area (Sq Ft)'].sum()
+    total_ghg_emissions = df['Total GHG Emissions (MT CO2e)'].sum()
 
     # Calculate percentage of total buildings and total GFA
     summary_df['percentage_of_total_buildings'] = (summary_df['total_count'] / total_buildings) * 100
     summary_df['percentage_of_total_gfa'] = (summary_df['total_gfa'] / total_floor_area) * 100
-    summary_df['percentage_of_total_ghg'] = (summary_df['total_ghg'] / total_floor_area) * 100
+    summary_df['percentage_of_total_ghg'] = (summary_df['total_ghg'] / total_ghg_emissions) * 100
 
     return summary_df
 
@@ -96,7 +97,7 @@ def filter_and_sort_significant_building_types(df):
     filtered_df = df[
         (df['total_count'] / total_buildings >= 0.02) &
         (df['total_gfa'] / total_gfa >= 0.02) &
-        (df['total_ghg'] / total_gfa >= 0.02)
+        (df['total_ghg'] / total_ghg >= 0.02)
     ]
 
     # Sort by total count and then by total GFA (descending order)
@@ -151,7 +152,7 @@ def plot_filtered_building_summary(df, filename):
 
     # Extend x-axis to make room for the percentage labels
     max_ghg = df['total_ghg'].max()
-    axes[2].set_xlim(0, max_gfa * 1.15)  # Extend the x-axis by 15%
+    axes[2].set_xlim(0, max_ghg * 1.15)  # Extend the x-axis by 15%
 
     # Add percentage labels in front of the bars
     for index, value in enumerate(df['total_ghg']):

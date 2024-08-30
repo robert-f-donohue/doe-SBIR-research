@@ -1,0 +1,49 @@
+Primary Property Type - Self Selected,count,q1,q2,q3,<50k sf Count,50k-100k sf Count,150k-250k sf Count,250k-500k sf Count,500k-1M sf Count,>1M sf Count
+Automobile Dealership,1,25772.0,25772.0,25772.0,1,0,0,0,0,0
+Bank Branch,1,46350.0,46350.0,46350.0,1,0,0,0,0,0
+College/University,206,36345.75,74562.0,123244.75,73,55,66,11,1,0
+Data Center,4,29915.0,60260.0,102000.0,2,1,1,0,0,0
+Drinking Water Treatment & Distribution,1,155632.0,155632.0,155632.0,0,0,1,0,0,0
+Enclosed Mall,2,483985.75,571889.5,659793.25,0,0,0,1,1,0
+Financial Office,2,28653.75,28961.5,29269.25,2,0,0,0,0,0
+Fire Station,6,16323.0,16910.5,18583.25,6,0,0,0,0,0
+Fitness Center/Health Club/Gym,7,23836.0,59701.0,106241.5,3,2,2,0,0,0
+Food Service,1,30000.0,30000.0,30000.0,1,0,0,0,0,0
+Hospital (General Medical & Surgical),2,433256.0,506262.0,579268.0,0,0,0,1,1,0
+Hotel,19,38426.5,84930.0,178121.0,6,4,5,4,0,0
+K-12 School,39,6469.5,55000.0,93254.0,18,12,8,1,0,0
+Laboratory,65,53329.0,122410.0,245405.0,12,18,19,15,1,0
+Library,3,10006.5,15447.0,67816.0,2,0,1,0,0,0
+Mailing Center/Post Office,1,56000.0,56000.0,56000.0,0,1,0,0,0,0
+Manufacturing/Industrial Plant,4,32003.0,50137.0,88528.0,2,1,1,0,0,0
+Medical Office,3,30392.5,36212.0,60719.0,2,1,0,0,0,0
+Mixed Use Property,26,41180.0,60056.5,201790.25,9,6,7,2,2,0
+Movie Theater,1,25800.0,25800.0,25800.0,1,0,0,0,0,0
+Multifamily Housing,174,48866.5,91673.0,188629.25,49,45,53,25,2,0
+Museum,3,139792.5,209788.0,335171.5,0,1,1,1,0,0
+Non-Refrigerated Warehouse,1,60200.0,60200.0,60200.0,0,1,0,0,0,0
+Office,122,34501.5,66234.5,181853.5,47,25,30,20,0,0
+Other,4,27043.25,44864.0,71976.75,2,1,1,0,0,0
+Other - Lodging/Residential,1,68991.0,68991.0,68991.0,0,1,0,0,0,0
+Other - Mall,1,3017.0,3017.0,3017.0,1,0,0,0,0,0
+Other - Public Services,2,20761.5,40762.0,60762.5,1,1,0,0,0,0
+Other - Recreation,6,15979.0,19732.0,26014.0,6,0,0,0,0,0
+Other - Restaurant/Bar,1,20800.0,20800.0,20800.0,1,0,0,0,0,0
+Other - Services,1,46666.0,46666.0,46666.0,1,0,0,0,0,0
+Other - Technology/Science,5,90277.0,121721.0,142919.0,1,1,3,0,0,0
+Outpatient Rehabilitation/Physical Therapy,1,352622.0,352622.0,352622.0,0,0,0,1,0,0
+Parking,12,105109.75,183212.5,241594.25,1,2,7,2,0,0
+Police Station,1,162547.0,162547.0,162547.0,0,0,1,0,0,0
+Pre-school/Daycare,1,9478.0,9478.0,9478.0,1,0,0,0,0,0
+Residence Hall/Dormitory,42,22389.25,47059.5,191422.0,22,7,10,3,0,0
+Residential Care Facility,1,31179.0,31179.0,31179.0,1,0,0,0,0,0
+Restaurant,2,6560.5,9209.0,11857.5,2,0,0,0,0,0
+Retail Store,11,34714.5,36543.0,45250.0,8,2,1,0,0,0
+Self-Storage Facility,1,202175.0,202175.0,202175.0,0,0,1,0,0,0
+Senior Living Community,4,57677.75,70663.5,101463.25,1,2,1,0,0,0
+Social/Meeting Hall,2,14468.25,21615.5,28762.75,2,0,0,0,0,0
+Strip Mall,4,56481.5,63945.5,115862.0,1,2,0,1,0,0
+Supermarket/Grocery Store,2,49656.75,55140.5,60624.25,1,1,0,0,0,0
+Urgent Care/Clinic/Other Outpatient,2,48168.5,55116.0,62063.5,1,1,0,0,0,0
+Vocational School,1,21097.0,21097.0,21097.0,1,0,0,0,0,0
+Worship Facility,16,21174.5,28122.5,35897.25,15,1,0,0,0,0
