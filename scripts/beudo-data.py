@@ -202,14 +202,6 @@ eui_labels = ['<20 kbtu/sf', '<40 kbtu/sf', '<60 kbtu/sf', '<80 kbtu/sf', '<100 
 eui_df = calc_building_type_summary_stats(df, 'Site EUI (kBtu/ft2)', eui_bins, eui_labels)
 eui_df.to_csv('../data-files/beudo_data_files/beudo-eui_summary.csv', index=False)
 
-# # Year Built summary
-# year_built_bins = [0, 1800, 1900, 1940, 1980, 2000, 2010, 2020, float('inf')]
-# year_built_labels = ['Built pre-1800', 'Built 1800-1900', 'Built 1900-1940', 'Built 1940-1980', 'Built 1980-2000',
-#                      'Built 2000-2010', 'Built 2010-2020', 'Built after 2020']
-# year_built_df = calc_building_type_summary_stats(df, 'Year Built', year_built_bins, year_built_labels)
-# year_built_df.to_csv('../data-files/berdo_data_files/LL84-year_built_summary.csv', index=False)
-
-
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Excel Summary Stats ------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
