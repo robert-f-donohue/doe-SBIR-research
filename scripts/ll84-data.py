@@ -94,9 +94,9 @@ def filter_and_sort_significant_building_types(df):
 
     # Filter for building types that represent at least 2% of total buildings and GFA
     filtered_df = df[
-        (df['total_count'] / total_buildings >= 0.02) &
-        (df['total_gfa'] / total_gfa >= 0.02) &
-        (df['total_ghg'] / total_ghg >= 0.02)
+        (df['total_count'] / total_buildings >= 0.02) |
+        (df['total_gfa'] / total_gfa >= 0.03) |
+        (df['total_ghg'] / total_ghg >= 0.05)
     ]
 
     # Sort by total count and then by total GFA (descending order)
@@ -108,6 +108,13 @@ def filter_and_sort_significant_building_types(df):
     sorted_df['percent_of_total_ghg'] = (sorted_df['total_ghg'] / total_ghg) * 100
 
     return sorted_df
+
+
+def calc_ghg_percentages(df):
+    df['percent_of_city_wide_ghg'] = (df['total_ghg'] / TOTAL_CITY_WIDE_EMISSIONS)
+    df['percent_of_building_sector_ghg'] = (df['total_ghg'] / TOTAL_BUILDING_SECTOR_EMISSIONS)
+
+    return df
 
 
 def plot_filtered_building_summary(df, filename):
@@ -164,6 +171,13 @@ def plot_filtered_building_summary(df, filename):
 
 
 # --------------------------------------------------------------------------------------------------------
+# ----------------------------------- City-Wide Emissions Data -------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+TOTAL_CITY_WIDE_EMISSIONS = 55611065
+TOTAL_BUILDING_SECTOR_EMISSIONS = 37137361
+
+# --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Clean Data & Generate CSVs -----------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
@@ -191,8 +205,13 @@ columns_to_keep = [
 df = df[columns_to_keep]
 df = df.sort_values(by=['Primary Property Type - Self Selected'], ascending=True)
 
+# Replace Hospital (General Medical & Surgical) with Hospital
+df['Primary Property Type - Self Selected'] = (df['Primary Property Type - Self Selected'].str
+                                               .replace('Hospital (General Medical & Surgical)', 'Hospital', regex=False))
+
 # Generate portfolio summary statistics
 building_type_summary_df = calc_building_type_allocation(df)
+building_type_summary_df = calc_ghg_percentages(building_type_summary_df)
 building_type_summary_df.to_csv('../data-files/LL_84_data_files/LL84-building_summary.csv', index=False)
 
 # Gross Floor Area (GFA) summary
