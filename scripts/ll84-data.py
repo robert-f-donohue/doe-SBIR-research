@@ -118,7 +118,7 @@ def calc_ghg_percentages(df):
 
 
 def plot_filtered_building_summary(df, filename):
-    fig, axes = plt.subplots(1, 3, figsize=(18, 8))  # figsize=(width, height) in inches
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # figsize=(width, height) in inches
 
     # Plot for Total Count of Buildings
     sns.barplot(x='total_count', y='Primary Property Type - Self Selected', data=df, ax=axes[0], palette='Blues_d')
