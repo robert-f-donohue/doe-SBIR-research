@@ -185,13 +185,22 @@ TOTAL_BUILDING_SECTOR_EMISSIONS = 4335912
 # --------------------------------------------------------------------------------------------------------
 
 # File path to BERDO data & read in CSV
-file_path = '../data-files/berdo_data_files/BERDO_Data.csv'
-df = pd.read_csv(file_path)
+file_path_berdo = '../data-files/berdo_data_files/BERDO_Data-Thresholds.csv'
+df = pd.read_csv(file_path_berdo)
+
+# file_path to GHG Emissions factors through 2050 and load in CSV
+file_path_emissions = '../data-files/berdo_data_files/berdo-emissions-factors.csv'
+df_emissions_factors = pd.read_csv(file_path_emissions)
 
 # Subset df to only include relevant columns
 columns_to_keep = [
     'BERDO ID', 'Property Owner Name', 'Building Address', 'Reported Gross Floor Area (Sq Ft)', 'Largest Property Type',
-    'Site EUI (Energy Use Intensity kBtu/ft2)', 'Total GHG Emissions (MT CO2e)', 'BERDO Property Type'
+    'Site EUI (Energy Use Intensity kBtu/ft2)', 'Total GHG Emissions (MT CO2e)', 'BERDO Property Type',
+    'Threshold 2025', 'Threshold 2026', 'Threshold 2027', 'Threshold 2028', 'Threshold 2029', 'Threshold 2030',
+    'Threshold 2031', 'Threshold 2032', 'Threshold 2033', 'Threshold 2034', 'Threshold 2035', 'Threshold 2036',
+    'Threshold 2037', 'Threshold 2038', 'Threshold 2039', 'Threshold 2040', 'Threshold 2041', 'Threshold 2042',
+    'Threshold 2043', 'Threshold 2044', 'Threshold 2045', 'Threshold 2046', 'Threshold 2047', 'Threshold 2048',
+    'Threshold 2049', 'Threshold 2050+'
 ]
 df = df[columns_to_keep]
 df = df.sort_values(by=['BERDO Property Type'], ascending=True)
