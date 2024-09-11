@@ -6,6 +6,10 @@ from openpyxl import load_workbook
 from openpyxl.drawing.image import Image
 sns.set_theme(style="whitegrid", palette="pastel")
 
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Data Analysis Functions --------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
 
 def plot_histograms(df, building_type, gfa_bins, eui_bins, year_built_bins):
     subset_df = df[df['Primary Property Type - Self Selected'] == building_type]
@@ -94,9 +98,9 @@ def filter_and_sort_significant_building_types(df):
 
     # Filter for building types that represent at least 2% of total buildings and GFA
     filtered_df = df[
-        (df['total_count'] / total_buildings >= 0.02) &
-        (df['total_gfa'] / total_gfa >= 0.02) &
-        (df['total_ghg'] / total_ghg >= 0.02)
+        (df['total_count'] / total_buildings >= 0.03) &
+        (df['total_gfa'] / total_gfa >= 0.03) &
+        (df['total_ghg'] / total_ghg >= 0.05)
     ]
 
     # Sort by total count and then by total GFA (descending order)
@@ -110,10 +114,17 @@ def filter_and_sort_significant_building_types(df):
     return sorted_df
 
 
+def calc_ghg_percentages(df):
+    df['percent_of_city_wide_ghg'] = (df['total_ghg'] / TOTAL_CITY_WIDE_EMISSIONS)
+    df['percent_of_building_sector_ghg'] = (df['total_ghg'] / TOTAL_BUILDING_SECTOR_EMISSIONS)
+
+    return df
+
+
 def plot_filtered_building_summary(df, filename):
     fig, axes = plt.subplots(1, 3, figsize=(18, 8))  # figsize=(width, height) in inches
 
-    # Plot for Total Count of Buildings
+    # Plot for Total Count of Buildings per Building Type
     sns.barplot(x='total_count', y='Primary Property Type - Self Selected', data=df, ax=axes[0], palette='Blues_d')
     axes[0].set_title('Total Count of Buildings by Type')
     axes[0].set_xlabel('Total Count')
@@ -128,7 +139,7 @@ def plot_filtered_building_summary(df, filename):
         percentage = df['percent_of_total_buildings'].iloc[index]
         axes[0].text(value + (0.02 * max_count), index, f'{percentage:.1f}%', va='center')
 
-    # Plot for Total GFA
+    # Plot for Total GFA per Building Type
     sns.barplot(x='total_gfa', y='Primary Property Type - Self Selected', data=df, ax=axes[1], palette='Reds_d')
     axes[1].set_title('Total Gross Floor Area (GFA) by Building Type')
     axes[1].set_xlabel('Total GFA (ft²)')
@@ -143,7 +154,7 @@ def plot_filtered_building_summary(df, filename):
         percentage = df['percent_of_total_gfa'].iloc[index]
         axes[1].text(value + (0.02 * max_gfa), index, f'{percentage:.1f}%', va='center')
 
-    # Plot for Total GHG
+    # Plot for GHG Emissions per Building Type
     sns.barplot(x='total_ghg', y='Primary Property Type - Self Selected', data=df, ax=axes[2], palette='Greens_d')
     axes[2].set_title('Total GHG Emissions (MT CO2e) by Building Type')
     axes[2].set_xlabel('Total GHG (MT CO2e)')
@@ -162,6 +173,13 @@ def plot_filtered_building_summary(df, filename):
     plt.savefig(filename)
     plt.close()
 
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- City-Wide Emissions Data -------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+TOTAL_CITY_WIDE_EMISSIONS = 1413026
+TOTAL_BUILDING_SECTOR_EMISSIONS = 1167913
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Clean Data & Generate CSVs -----------------------------------------
@@ -187,6 +205,7 @@ df = df.sort_values(by=['Reporting ID'], ascending=True)
 
 # Generate portfolio summary statistics
 building_type_summary_df = calc_building_type_allocation(df)
+building_type_summary_df = calc_ghg_percentages(building_type_summary_df)
 building_type_summary_df.to_csv('../data-files/beudo_data_files/beudo-building_summary.csv', index=False)
 
 # Gross Floor Area (GFA) summary

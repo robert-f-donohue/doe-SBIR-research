@@ -97,7 +97,7 @@ def filter_and_sort_significant_building_types(df):
     filtered_df = df[
         (df['total_count'] / total_buildings >= 0.02) &
         (df['total_gfa'] / total_gfa >= 0.02) &
-        (df['total_ghg'] / total_ghg >= 0.02)
+        (df['total_ghg'] / total_ghg >= 0.05)
     ]
 
     # Sort by total count and then by total GFA (descending order)
@@ -109,6 +109,13 @@ def filter_and_sort_significant_building_types(df):
     sorted_df['percent_of_total_ghg'] = (sorted_df['total_ghg'] / total_ghg) * 100
 
     return sorted_df
+
+
+def calc_ghg_percentages(df):
+    df['percent_of_city_wide_ghg'] = (df['total_ghg'] / TOTAL_CITY_WIDE_EMISSIONS)
+    df['percent_of_building_sector_ghg'] = (df['total_ghg'] / TOTAL_BUILDING_SECTOR_EMISSIONS)
+
+    return df
 
 
 def plot_filtered_building_summary(df, filename):
@@ -149,6 +156,8 @@ def plot_filtered_building_summary(df, filename):
     axes[2].set_title('Total GHG Emissions (MT CO2e) by Building Type')
     axes[2].set_xlabel('Total GHG (MT CO2e)')
     axes[2].set_ylabel('')
+    tick_interval = 100000
+    axes[2].set_xticks(range(0, max(df['total_ghg']) + tick_interval, tick_interval))
 
     # Extend x-axis to make room for the percentage labels
     max_ghg = df['total_ghg'].max()
@@ -162,6 +171,14 @@ def plot_filtered_building_summary(df, filename):
     plt.tight_layout()
     plt.savefig(filename)
     plt.close()
+
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- City-Wide Emissions Data -------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+TOTAL_CITY_WIDE_EMISSIONS = 6235970
+TOTAL_BUILDING_SECTOR_EMISSIONS = 4335912
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Clean Data & Generate CSVs -----------------------------------------
@@ -181,6 +198,7 @@ df = df.sort_values(by=['BERDO Property Type'], ascending=True)
 
 # Generate portfolio summary statistics
 building_type_summary_df = calc_building_type_allocation(df)
+building_type_summary_df = calc_ghg_percentages(building_type_summary_df)
 building_type_summary_df.to_csv('../data-files/berdo_data_files/berdo-building_summary.csv', index=False)
 
 # Gross Floor Area (GFA) summary
