@@ -129,7 +129,7 @@ columns_energy = [
 
 # Filter the dataset to only include rows that are in scope
 ll84_df_filtered = df_ll84[columns_to_keep].copy()
-ll84_df_filtered = ll84_df_filtered.dropna(subset=['Gross Floor Area (ft2)'])
+# ll84_df_filtered = ll84_df_filtered.dropna(subset=['Gross Floor Area (ft2)'])
 ll84_df_filtered = ll84_df_filtered[ll84_df_filtered['Primary Property Type - Self Selected'].notnull()]
 ll84_df_filtered = ll84_df_filtered[ll84_df_filtered['Site EUI (kBtu/sf)'].notnull()]
 ll84_df_filtered = (ll84_df_filtered[~ll84_df_filtered['Primary Property Type - Self Selected']
@@ -166,25 +166,43 @@ df_pivot.to_csv('../data-files/LL_84_data_files/test.csv', index=False)
 # --------------------------------------------------------------------------------------------------------
 
 # Calculate fines for 2025-2030 and 2030-2050 using the optimized function
-fines_2025_2030 = calculate_fines(df_pivot, df_emissions_factors, 2025, 2030)
-fines_2030_2050 = calculate_fines(df_pivot, df_emissions_factors, 2030, 2050)
+fines_2025_2030 = calculate_fines(df_pivot, df_emissions_factors, 2025, 2029)
+fines_2030_2034 = calculate_fines(df_pivot, df_emissions_factors, 2030, 2034)
+fines_2035_2039 = calculate_fines(df_pivot, df_emissions_factors, 2035, 2039)
+fines_2040_2044 = calculate_fines(df_pivot, df_emissions_factors, 2040, 2044)
+fines_2045_2049 = calculate_fines(df_pivot, df_emissions_factors, 2045, 2049)
 
 # Aggregate fines by building type
-aggregated_fines_2025_2030 = aggregate_fines_by_typology(fines_2025_2030)
-aggregated_fines_2030_2050 = aggregate_fines_by_typology(fines_2030_2050)
+aggregated_fines_2025_2029 = aggregate_fines_by_typology(fines_2025_2030)
+aggregated_fines_2030_2034 = aggregate_fines_by_typology(fines_2030_2034)
+aggregated_fines_2035_2039 = aggregate_fines_by_typology(fines_2035_2039)
+aggregated_fines_2040_2044 = aggregate_fines_by_typology(fines_2040_2044)
+aggregated_fines_2045_2049 = aggregate_fines_by_typology(fines_2045_2049)
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Add columns to Building Summary Table ------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # Merge with building summary data and save to Excel
-# First merge aggregated fines for 2025-2030
-building_type_summary_df = pd.merge(df_building_type_summary, aggregated_fines_2025_2030,
-                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2025_2030'))
+# First merge aggregated fines for 2025-2029
+building_type_summary_df = pd.merge(df_building_type_summary, aggregated_fines_2025_2029,
+                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2025_2039'))
 
-# Now merge aggregated fines for 2030-2050
-building_type_summary_df = pd.merge(building_type_summary_df, aggregated_fines_2030_2050,
-                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2030_2050'))
+# Now merge aggregated fines for 2030-2034
+building_type_summary_df = pd.merge(building_type_summary_df, aggregated_fines_2030_2034,
+                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2030_2034'))
+
+# Now merge aggregated fines for 2035-2039
+building_type_summary_df = pd.merge(building_type_summary_df, aggregated_fines_2035_2039,
+                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2035_2039'))
+
+# Now merge aggregated fines for 2040-2044
+building_type_summary_df = pd.merge(building_type_summary_df, aggregated_fines_2040_2044,
+                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2040_2044'))
+
+# Now merge aggregated fines for 2045-2049
+building_type_summary_df = pd.merge(building_type_summary_df, aggregated_fines_2045_2049,
+                                    on='Primary Property Type - Self Selected', how='left', suffixes=('', '_2045_2049'))
 
 # Save the updated building summary sheet to the Excel file
 with pd.ExcelWriter(file_path_excel, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
