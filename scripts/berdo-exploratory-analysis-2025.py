@@ -9,6 +9,70 @@ import seaborn as sns
 sns.set_theme(style="whitegrid", palette="pastel")
 
 
+def histograms(df):
+    # plot histograms to see distributions
+    plt.figure(figsize=(20, 6))
+    # Gross Floor Area Distribution
+    plt.subplot(1, 4, 1)
+    sns.histplot(df['Reported Gross Floor Area (Sq Ft)'], bins=30, kde=True)
+    plt.title('Gross Floor Area (GSF) Distribution')
+    plt.xlabel('Gross Floor Area (Sq Ft)')
+    plt.ylabel('Count')
+    # Site EUI Distribution
+    plt.subplot(1, 4, 2)
+    sns.histplot(df['Site EUI (Energy Use Intensity kBtu/ft2)'], bins=30, kde=True)
+    plt.title('Site EUI Distribution')
+    plt.xlabel('Site EUI (kBtu/ft2)')
+    plt.ylabel('Count')
+    # Total Energy Distribution
+    plt.subplot(1, 4, 3)
+    sns.histplot(df['Total Site Energy Usage (kBtu)'], bins=30, kde=True)
+    plt.title('Total Energy Distribution')
+    plt.xlabel('Site Energy Usage (kBtu)')
+    plt.ylabel('Count')
+    # GHG Emissions Distribution
+    plt.subplot(1, 4, 4)
+    sns.histplot(df['Estimated Total GHG Emissions (kgCO2e)'], bins=30, kde=True)
+    plt.title('GHG Emissions Distribution')
+    plt.xlabel('GHG Emissions (kg CO2e)')
+    plt.ylabel('Count')
+
+    plt.tight_layout()
+    plt.show()
+
+def histogram_log(df):
+    # Log Scale Distributions
+    plt.figure(figsize=(20, 6))
+    # Log Gross Floor Area Distribution
+    plt.subplot(1, 4, 1)
+    sns.histplot(np.log(df['Reported Gross Floor Area (Sq Ft)']), bins=30, kde=True)
+    plt.title('Log Scale: Gross Floor Area Distribution')
+    plt.xlabel('Log Gross Floor Area')
+    plt.ylabel('Count')
+    # Log Site EUI Distribution
+    plt.subplot(1, 4, 2)
+    sns.histplot(np.log(df['Site EUI (Energy Use Intensity kBtu/ft2)']), bins=30, kde=True)
+    plt.title('Log Scale: Site EUI Distribution')
+    plt.xlabel('Log Site EUI')
+    plt.ylabel('Count')
+    # Log Total Energy Distribution
+    plt.subplot(1, 4, 3)
+    sns.histplot(np.log(df['Total Site Energy Usage (kBtu)']), bins=30, kde=True)
+    plt.title('Log Scale: Total Energy Distribution')
+    plt.xlabel('Log Site Energy Usage (kBtu)')
+    plt.ylabel('Count')
+    # Log GHG Emissions Distribution
+    plt.subplot(1, 4, 4)
+    sns.histplot(np.log(df['Estimated Total GHG Emissions (kgCO2e)']), bins=30, kde=True)
+    plt.title('Log Scale: GHG Emissions Distribution')
+    plt.xlabel('Log GHG Emissions (kg CO2e)')
+    plt.ylabel('Count')
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Setting Up Analysis ------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
@@ -42,88 +106,75 @@ for feature in features:
 # drop any rows that became NaN after conversion
 multifamily_df = multifamily_df.dropna(subset=features)
 
+# print original dataset size
 print(f"Original Dataset Size: {multifamily_df.shape[0]}")
 
 # drop any rows with GSF below 20,000 SF
 min_gsf = 20000
 multifamily_df = multifamily_df[multifamily_df['Reported Gross Floor Area (Sq Ft)'] >= min_gsf]
 
+# print new dataset size
 print(f"Dataset Size After Filtering by GSF (>= {min_gsf} sq ft): {multifamily_df.shape[0]}")
 
-# ------------------------------ Scatter Plots ---------------------------------------------
-# plot original dataset before cleaning
-plt.figure(figsize=(12, 8))
-sns.scatterplot(
-    data=multifamily_df,
-    x='Reported Gross Floor Area (Sq Ft)',
-    y='Site EUI (Energy Use Intensity kBtu/ft2)',
-    palette='Set2'
-)
-plt.title('Raw Building Data Before Cleaning (Buildings ≥ 20,000 Sq Ft)')
-plt.xlabel('Gross Floor Area (ft2)')
-plt.ylabel('Site EUI (kBtu/ft2)')
-plt.grid(True)
-plt.show()
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Visualize Distributions --------------------------------------------
+# --------------------------------------------------------------------------------------------------------
 
-# ------------------------------ Histograms -----------------------------------------------
-# plot histograms to see distributions
-plt.figure(figsize=(12, 6))
-# Gross Floor Area Distribution
-plt.subplot(1, 2, 1)
-sns.histplot(multifamily_df['Reported Gross Floor Area (Sq Ft)'], bins=30, kde=True)
-plt.title('Gross Floor Area (GSF) Distribution')
-plt.xlabel('Gross Floor Area (Sq Ft)')
-plt.ylabel('Count')
-# Site EUI Distribution
-plt.subplot(1, 2, 2)
-sns.histplot(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'], bins=30, kde=True)
-plt.title('Site EUI Distribution')
-plt.xlabel('Site EUI (kBtu/ft2)')
-plt.ylabel('Count')
-plt.tight_layout()
-plt.show()
-
-# Log Scale Distributions
-plt.figure(figsize=(12, 6))
-# Log Gross Floor Area Distribution
-plt.subplot(1, 2, 1)
-sns.histplot(np.log(multifamily_df['Reported Gross Floor Area (Sq Ft)']), bins=30, kde=True)
-plt.title('Log Scale: Gross Floor Area Distribution')
-plt.xlabel('Log Gross Floor Area')
-plt.ylabel('Count')
-# Log Site EUI Distribution
-plt.subplot(1, 2, 2)
-sns.histplot(np.log(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)']), bins=30, kde=True)
-plt.title('Log Scale: Site EUI Distribution')
-plt.xlabel('Log Site EUI')
-plt.ylabel('Count')
-
-plt.tight_layout()
-plt.show()
-
-# collect conditions for all features
-conditions = []
-
-for feature in features:
-    Q1 = multifamily_df[feature].quantile(0.25)
-    Q3 = multifamily_df[feature].quantile(0.75)
-    IQR = Q3 - Q1
-    condition = (multifamily_df[feature] >= (Q1 - 1.5 * IQR)) & (multifamily_df[feature] <= (Q3 + 1.5 * IQR))
-    conditions.append(condition)
-
-# combine all conditions
-combined_conditions = np.logical_and.reduce(conditions)
-cleaned_df = multifamily_df[combined_conditions].copy()
-
-print(f"Dataset Size After Outlier Removal: {cleaned_df.shape[0]}")
-
-
-# normalize the data
-scaler = StandardScaler()
-X = scaler.fit_transform(cleaned_df[features])
+# visualize feature distribution
+histograms(multifamily_df)
+histogram_log(multifamily_df)
 
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Cluster Analysis ---------------------------------------------------
+# ----------------------------------- Log Transformations ------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# log transformation for GSF and EUI
+cleaned_df = multifamily_df.copy()
+cleaned_df['Log GSF'] = np.log(cleaned_df['Reported Gross Floor Area (Sq Ft)'])
+cleaned_df['Log EUI'] = np.log(cleaned_df['Site EUI (Energy Use Intensity kBtu/ft2)'])
+cleaned_df['Log Total Energy'] = np.log(cleaned_df['Total Site Energy Usage (kBtu)'])
+cleaned_df['Log GHG Emissions'] = np.log(cleaned_df['Estimated Total GHG Emissions (kgCO2e)'])
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Percentile-Based Filtering -----------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# set percentiles for filtering
+gsf_upper_bound = np.percentile(cleaned_df['Log GSF'], 99)              # top 1% for GSF
+eui_upper_bound = np.percentile(cleaned_df['Log EUI'], 98)              # top 2% for EUI
+energy_upper_bound = np.percentile(cleaned_df['Log Total Energy'], 98)  # top 2% for Total Energy
+ghg_upper_bound = np.percentile(cleaned_df['Log GHG Emissions'], 98)    # top 2% for GHG
+
+# filter out the extreme values based on desired percentiles for all features
+filtered_df = cleaned_df[
+    (cleaned_df['Log GSF'] <= gsf_upper_bound) &
+    (cleaned_df['Log EUI'] <= eui_upper_bound) &
+    (cleaned_df['Log Total Energy'] <= energy_upper_bound) &
+    (cleaned_df['Log GHG Emissions'] <= ghg_upper_bound)
+].copy()
+
+# print new dataset size
+print(f"Dataset Size After Percentile-based Filtering: {filtered_df.shape[0]}")
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Normalization (Log) ------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# normalize log-transformed data
+log_features = ['Log GSF', 'Log EUI', 'Log Total Energy', 'Log GHG Emissions']
+
+# DEBUG
+print("\nData Types Before Scaling:\n", filtered_df[log_features].dtypes)
+print("\nCheck for NaN Values:\n", filtered_df[log_features].isna().sum())
+
+# initialize StandardScaler object
+scaler = StandardScaler()
+
+# fit scaler to log data
+X = scaler.fit_transform(filtered_df[log_features])
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Elbow Analysis -----------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # determine the optimal number of clusters using Elbow Method
@@ -144,17 +195,21 @@ plt.ylabel('SSE (Sum of Squared Errors')
 plt.grid(True)
 plt.show()
 
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Cluster Analysis ----------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
 # perform K-Means Clustering with 2 clusters (prototypes)
 optimal_clusters_simple = 2
 kmeans_simple = KMeans(n_clusters=optimal_clusters_simple, random_state=42)
 labels_simple = kmeans_simple.fit_predict(X)
-cleaned_df.loc[:, 'Cluster_simple'] = labels_simple
+filtered_df.loc[:, 'Cluster_simple'] = labels_simple
 
 # perform K-Means Clustering with 8 clusters (prototypes)
 optimal_clusters_complex = 6
 kmeans_complex = KMeans(n_clusters=optimal_clusters_complex, random_state=42)
 labels_complex = kmeans_complex.fit_predict(X)
-cleaned_df.loc[:, 'Cluster_complex'] = labels_complex
+filtered_df.loc[:, 'Cluster_complex'] = labels_complex
 
 # evaluate clustering with Silhouette Score
 sil_score_simple = silhouette_score(X, labels_simple)
@@ -173,16 +228,16 @@ pca_components_simple = pca_simple.fit_transform(X)
 pca_components_complex = pca_complex.fit_transform(X)
 
 # add columns
-cleaned_df.loc[:, 'PCA_simple_1'] = pca_components_simple[:, 0]
-cleaned_df.loc[:, 'PCA_simple_2'] = pca_components_simple[:, 1]
-cleaned_df.loc[:, 'PCA_complex_1'] = pca_components_complex[:, 0]
-cleaned_df.loc[:, 'PCA_complex_2'] = pca_components_complex[:, 1]
+filtered_df.loc[:, 'PCA_simple_1'] = pca_components_simple[:, 0]
+filtered_df.loc[:, 'PCA_simple_2'] = pca_components_simple[:, 1]
+filtered_df.loc[:, 'PCA_complex_1'] = pca_components_complex[:, 0]
+filtered_df.loc[:, 'PCA_complex_2'] = pca_components_complex[:, 1]
 
 # scatter plots of clusters
 # Simple Clustering
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
-    data=cleaned_df,
+    data=filtered_df,
     x='PCA_simple_1',
     y='PCA_simple_2',
     hue='Cluster_simple',
@@ -200,7 +255,7 @@ plt.show()
 # Complex Clustering
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
-    data=cleaned_df,
+    data=filtered_df,
     x='PCA_complex_1',
     y='PCA_complex_2',
     hue='Cluster_complex',
@@ -215,7 +270,7 @@ plt.grid(True)
 plt.show()
 
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Prototype Properties  ----------------------------------------------
+# ----------------------------------- Prototype Properties -----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # get cluster centriods of prototypes
@@ -223,8 +278,8 @@ cluster_centers_simple = scaler.inverse_transform(kmeans_simple.cluster_centers_
 cluster_centers_complex = scaler.inverse_transform(kmeans_complex.cluster_centers_)
 
 # create dataframes of the prototype features
-prototype_simple_df = pd.DataFrame(cluster_centers_simple, columns=features)
-prototype_complex_df = pd.DataFrame(cluster_centers_complex, columns=features)
+prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=features))
+prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=features))
 # add cluster index
 prototype_simple_df['Cluster_simple'] = prototype_simple_df.index
 prototype_complex_df['Cluster_complex'] = prototype_complex_df.index
@@ -235,17 +290,21 @@ print(prototype_simple_df)
 print("Prototypes (Centriods of Clusters - Complex):")
 print(prototype_complex_df)
 
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Visualize Clusters -------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
 # plot characteristics of prototypes
 # simple
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
-    data=cleaned_df,
+    data=filtered_df,
     x='Reported Gross Floor Area (Sq Ft)',
     y='Site EUI (Energy Use Intensity kBtu/ft2)',
     hue='Cluster_simple',
     palette='Set2'
 )
-plt.title('Simple Clusters on GSF vs. EUI (Buildings ≥ 20,000 Sq Ft)')
+plt.title('Simple Clusters on GSF vs. EUI (Percentile-Filtered)')
 plt.xlabel('Gross Floor Area (Sq Ft)')
 plt.ylabel('Site EUI (kBtu/sf)')
 plt.legend(title='Cluster')
@@ -255,13 +314,13 @@ plt.show()
 # complex
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
-    data=cleaned_df,
+    data=filtered_df,
     x='Reported Gross Floor Area (Sq Ft)',
     y='Site EUI (Energy Use Intensity kBtu/ft2)',
     hue='Cluster_complex',
     palette='Set2'
 )
-plt.title('Complex Clusters on GSF vs. EUI (Buildings ≥ 20,000 Sq Ft)')
+plt.title('Complex Clusters on GSF vs. EUI (Percentile-Filtered)')
 plt.xlabel('Gross Floor Area (Sq Ft)')
 plt.ylabel('Site EUI (kBtu/sf)')
 plt.legend(title='Cluster')
