@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
+from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme(style="whitegrid", palette="pastel")
@@ -163,10 +164,6 @@ print(f"Dataset Size After Percentile-based Filtering: {filtered_df.shape[0]}")
 # normalize log-transformed data
 log_features = ['Log GSF', 'Log EUI', 'Log Total Energy', 'Log GHG Emissions']
 
-# DEBUG
-print("\nData Types Before Scaling:\n", filtered_df[log_features].dtypes)
-print("\nCheck for NaN Values:\n", filtered_df[log_features].isna().sum())
-
 # initialize StandardScaler object
 scaler = StandardScaler()
 
@@ -199,23 +196,38 @@ plt.show()
 # ----------------------------------- Cluster Analysis ----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# perform K-Means Clustering with 2 clusters (prototypes)
-optimal_clusters_simple = 2
-kmeans_simple = KMeans(n_clusters=optimal_clusters_simple, random_state=42)
-labels_simple = kmeans_simple.fit_predict(X)
-filtered_df.loc[:, 'Cluster_simple'] = labels_simple
+# DBSCAN Parameters (Start with these, then tune as needed)
+eps = 0.5
+min_samples = 3
 
-# perform K-Means Clustering with 8 clusters (prototypes)
-optimal_clusters_complex = 6
-kmeans_complex = KMeans(n_clusters=optimal_clusters_complex, random_state=42)
-labels_complex = kmeans_complex.fit_predict(X)
-filtered_df.loc[:, 'Cluster_complex'] = labels_complex
+# DBSCAN Clustering
+dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+labels_dbscan = dbscan.fit_predict(X)
+filtered_df.loc[:, 'Cluster_dbscan'] = labels_dbscan
 
-# evaluate clustering with Silhouette Score
-sil_score_simple = silhouette_score(X, labels_simple)
-sil_score_complex = silhouette_score(X, labels_complex)
-print(f'Silhouette Score for {optimal_clusters_simple} clusters: {sil_score_simple}')
-print(f'Silhouette Score for {optimal_clusters_complex} clusters: {sil_score_complex}')
+# Handle noise points (-1 label)
+num_clusters = len(set(labels_dbscan)) - (1 if -1 in labels_dbscan else 0)
+print(f"\nNumber of Clusters found by DBSCAN: {num_clusters}")
+print(f"Number of Noise Points: {list(labels_dbscan).count(-1)}")
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------- Evaluate Clustering Performance --------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Silhouette Score (Only calculate if more than 1 cluster is found)
+if num_clusters > 1:
+    sil_score_dbscan = silhouette_score(X, labels_dbscan)
+    db_index_dbscan = davies_bouldin_score(X, labels_dbscan)
+    ch_index_dbscan = calinski_harabasz_score(X, labels_dbscan)
+else:
+    sil_score_dbscan = None
+    db_index_dbscan = None
+    ch_index_dbscan = None
+
+print("\nDBSCAN Clustering Metrics:")
+print(f"Silhouette Score: {sil_score_dbscan}")
+print(f"Davies-Bouldin Index: {db_index_dbscan}")
+print(f"Calinski-Harabasz Index: {ch_index_dbscan}")
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- PCA Analysis -------------------------------------------------------
@@ -240,7 +252,7 @@ sns.scatterplot(
     data=filtered_df,
     x='PCA_simple_1',
     y='PCA_simple_2',
-    hue='Cluster_simple',
+    hue='Cluster_dbscan',
     palette='Set1',
     alpha=0.7,
 )
@@ -258,7 +270,7 @@ sns.scatterplot(
     data=filtered_df,
     x='PCA_complex_1',
     y='PCA_complex_2',
-    hue='Cluster_complex',
+    hue='Cluster_dbscan',
     palette='Set1',
     alpha=0.7,
 )
@@ -270,25 +282,47 @@ plt.grid(True)
 plt.show()
 
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Prototype Properties -----------------------------------------------
+# ----------------------------- Pair Plot for Log Features -----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# get cluster centriods of prototypes
-cluster_centers_simple = scaler.inverse_transform(kmeans_simple.cluster_centers_)
-cluster_centers_complex = scaler.inverse_transform(kmeans_complex.cluster_centers_)
+# Pair Plot for Log-Transformed Features (SIMPLE)
+pair_plot_features = ['Log GSF', 'Log EUI', 'Log Total Energy', 'Log GHG Emissions', 'Cluster_dbscan']
+sns.pairplot(
+    filtered_df[pair_plot_features],
+    hue='Cluster_dbscan',
+    palette='Set2')
+plt.suptitle("Pair Plot of Log Features (2 Clusters)", y=1.02)
+plt.show()
 
-# create dataframes of the prototype features
-prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=features))
-prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=features))
-# add cluster index
-prototype_simple_df['Cluster_simple'] = prototype_simple_df.index
-prototype_complex_df['Cluster_complex'] = prototype_complex_df.index
+# Pair Plot for Log-Transformed Features (COMPLEX)
+pair_plot_features = ['Log GSF', 'Log EUI', 'Log Total Energy', 'Log GHG Emissions', 'Cluster_dbscan']
+sns.pairplot(
+    filtered_df[pair_plot_features],
+    hue='Cluster_dbscan',
+    palette='Set2')
+plt.suptitle("Pair Plot of Log Features (Complex Clusters)", y=1.02)
+plt.show()
 
-# display properties of prototypes (centriods)
-print("Prototypes (Centriods of Clusters - Simple):")
-print(prototype_simple_df)
-print("Prototypes (Centriods of Clusters - Complex):")
-print(prototype_complex_df)
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Prototype Properties -----------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+#
+# # get cluster centriods of prototypes
+# cluster_centers_simple = scaler.inverse_transform(gmm_simple.cluster_centers_)
+# cluster_centers_complex = scaler.inverse_transform(gmm_complex.cluster_centers_)
+#
+# # create dataframes of the prototype features
+# prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=features))
+# prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=features))
+# # add cluster index
+# prototype_simple_df['Cluster_simple'] = prototype_simple_df.index
+# prototype_complex_df['Cluster_complex'] = prototype_complex_df.index
+#
+# # display properties of prototypes (centriods)
+# print("Prototypes (Centriods of Clusters - Simple):")
+# print(prototype_simple_df)
+# print("Prototypes (Centriods of Clusters - Complex):")
+# print(prototype_complex_df)
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Visualize Clusters -------------------------------------------------
@@ -301,7 +335,7 @@ sns.scatterplot(
     data=filtered_df,
     x='Reported Gross Floor Area (Sq Ft)',
     y='Site EUI (Energy Use Intensity kBtu/ft2)',
-    hue='Cluster_simple',
+    hue='Cluster_dbscan',
     palette='Set2'
 )
 plt.title('Simple Clusters on GSF vs. EUI (Percentile-Filtered)')
@@ -317,7 +351,7 @@ sns.scatterplot(
     data=filtered_df,
     x='Reported Gross Floor Area (Sq Ft)',
     y='Site EUI (Energy Use Intensity kBtu/ft2)',
-    hue='Cluster_complex',
+    hue='Cluster_dbscan',
     palette='Set2'
 )
 plt.title('Complex Clusters on GSF vs. EUI (Percentile-Filtered)')
