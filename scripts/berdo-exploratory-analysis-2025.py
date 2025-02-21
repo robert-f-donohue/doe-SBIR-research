@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme(style="whitegrid", palette="pastel")
@@ -161,7 +161,7 @@ plt.grid(True)
 plt.show()
 
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Cluster Analysis ---------------------------------------------------
+# ----------------------------------- Cluster Analysis - KMeans ------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # perform K-Means Clustering with 2 clusters (prototypes)
@@ -171,16 +171,36 @@ labels_simple = kmeans_simple.fit_predict(X)
 filtered_df.loc[:, 'Cluster_simple'] = labels_simple
 
 # perform K-Means Clustering with 8 clusters (prototypes)
-optimal_clusters_complex = 6
+optimal_clusters_complex = 8
 kmeans_complex = KMeans(n_clusters=optimal_clusters_complex, random_state=42)
 labels_complex = kmeans_complex.fit_predict(X)
 filtered_df.loc[:, 'Cluster_complex'] = labels_complex
 
-# evaluate clustering with Silhouette Score
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Cluster Performance ------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+cluster_type = 'K-Means'
+
+# Metrics for Simple Clustering (2 Clusters)
 sil_score_simple = silhouette_score(X, labels_simple)
+db_index_simple = davies_bouldin_score(X, labels_simple)
+ch_index_simple = calinski_harabasz_score(X, labels_simple)
+
+print(f"\nSimple {cluster_type} Clustering (2 Clusters) Metrics:")
+print(f"Silhouette Score: {sil_score_simple}")
+print(f"Davies-Bouldin Index: {db_index_simple}")
+print(f"Calinski-Harabasz Index: {ch_index_simple}")
+
+# Metrics for Complex Clustering (6 Clusters)
 sil_score_complex = silhouette_score(X, labels_complex)
-print(f'Silhouette Score for {optimal_clusters_simple} clusters: {sil_score_simple}')
-print(f'Silhouette Score for {optimal_clusters_complex} clusters: {sil_score_complex}')
+db_index_complex = davies_bouldin_score(X, labels_complex)
+ch_index_complex = calinski_harabasz_score(X, labels_complex)
+
+print(f"\nComplex {cluster_type} Clustering ({optimal_clusters_complex} Clusters) Metrics:")
+print(f"Silhouette Score: {sil_score_complex}")
+print(f"Davies-Bouldin Index: {db_index_complex}")
+print(f"Calinski-Harabasz Index: {ch_index_complex}")
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- PCA Analysis -------------------------------------------------------
@@ -320,11 +340,72 @@ cluster_centers_simple = scaler.inverse_transform(kmeans_simple.cluster_centers_
 cluster_centers_complex = scaler.inverse_transform(kmeans_complex.cluster_centers_)
 
 # create dataframes of the prototype features
-prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=log_features))
-prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=log_features))
+prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=features))
+prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=features))
 
 # display properties of prototypes (centriods)
 print("Prototypes (Centriods of Clusters - Simple):")
 print(prototype_simple_df)
 print("Prototypes (Centriods of Clusters - Complex):")
 print(prototype_complex_df)
+
+# --------------------------------------------------------------------------------------------------------
+# ---------------------------- Export Clustered Data -----------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Add cluster labels to the DataFrame
+filtered_df['Cluster_2'] = labels_simple
+filtered_df[f'Cluster_{optimal_clusters_complex}'] = labels_complex
+
+# Export all data points with cluster labels
+filtered_df.to_csv('../berdo_data_files/exploratory-analysis-results/clustered_data.csv', index=False)
+print("Exported clustered data to clustered_data.csv")
+
+# --------------------------------------------------------------------------------------------------------
+# ---------------------------- Export Centroids for Prototypes -------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Get centroids for both 2 and 8 clusters
+centroids_2_clusters = scaler.inverse_transform(kmeans_simple.cluster_centers_)
+centroids_8_clusters = scaler.inverse_transform(kmeans_complex.cluster_centers_)
+
+# Create DataFrames for the centroids
+centroids_2_df = pd.DataFrame(centroids_2_clusters, columns=features)
+centroids_2_df['Cluster'] = range(2)
+centroids_8_df = pd.DataFrame(centroids_8_clusters, columns=features)
+centroids_8_df['Cluster'] = range(optimal_clusters_complex)
+
+# Export centroids for prototypes
+centroids_2_df.to_csv('../berdo_data_files/exploratory-analysis-results/centroids_2_clusters.csv', index=False)
+centroids_8_df.to_csv(f'../berdo_data_files/exploratory-analysis-results/centroids_{optimal_clusters_complex}_clusters.csv', index=False)
+print(f"Exported centroids for prototypes to centroids_2_clusters.csv and centroids_{optimal_clusters_complex}_clusters.csv")
+
+# --------------------------------------------------------------------------------------------------------
+# ---------------------------- Cross-Reference with Original Dataset -------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Merge the original columns back to the cleaned DataFrame before clustering
+# This ensures that we keep all relevant features for cross-referencing
+original_df = multifamily_df.copy()
+
+# Keep original index to merge back later
+original_df.reset_index(drop=True, inplace=True)
+filtered_df.reset_index(drop=True, inplace=True)
+
+# Merge cluster labels back to the original dataset
+# This keeps all columns, including the ones not used in clustering
+original_df['Cluster_2'] = filtered_df['Cluster_2']
+original_df['Cluster_8'] = filtered_df['Cluster_8']
+
+# If PCA components are included for visualization
+original_df['PCA_1'] = filtered_df['PCA_1']
+original_df['PCA_2'] = filtered_df['PCA_2']
+
+# --------------------------------------------------------------------------------------------------------
+# ---------------------------- Export Cross-Referenced Data ----------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Export the full dataset with cluster labels and all original features
+original_df.to_csv('../berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
+print("Exported cross-referenced clustered data to cross_referenced_clustered_data.csv")
+
