@@ -10,6 +10,54 @@ sns.set_theme(style="whitegrid", palette="pastel")
 
 
 # --------------------------------------------------------------------------------------------------------
+# ---------------------------- Log Transformed Features ---------------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# List of features that were log-transformed before clustering
+log_transformed_features = [
+    'Reported Gross Floor Area (Sq Ft)',
+    'Site EUI (Energy Use Intensity kBtu/ft2)',
+    'Total Site Energy Usage (kBtu)',
+    'Estimated Total GHG Emissions (kgCO2e)'
+]
+
+
+def get_prototypes_and_export(centers, cluster_count, filename_prefix):
+    """
+    Inverse transform and export cluster centroids as prototypes.
+
+    Parameters:
+    - centers: Cluster centroids from KMeans or KMedoids
+    - cluster_count: Number of clusters (e.g., 2 or 8)
+    - filename_prefix: Prefix for the output file (e.g., 'simple' or 'complex')
+    """
+    # Inverse transform to return to original scale
+    inverse_transformed = scaler.inverse_transform(centers)
+
+    # Apply inverse log transform (exp) BEFORE creating the DataFrame
+    for i, feature in enumerate(features):
+        if feature in log_transformed_features:
+            inverse_transformed[:, i] = np.exp(inverse_transformed[:, i])
+
+    # Create DataFrame for centroids
+    prototype_df = pd.DataFrame(inverse_transformed, columns=features)
+
+    # Add cluster labels for easy reference
+    prototype_df['Cluster'] = range(cluster_count)
+
+    # Display the prototypes
+    print(f"\nPrototypes (Centroids of Clusters - {filename_prefix.capitalize()}):")
+    print(prototype_df)
+
+    # Export to CSV
+    output_filename = f'../data-files/berdo_data_files/exploratory-analysis-results/{filename_prefix}_centroids_{cluster_count}_clusters.csv'
+    prototype_df.to_csv(output_filename, index=False)
+    print(f"Exported prototypes to {output_filename}")
+
+    return prototype_df
+
+
+# --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Setting Up Analysis ------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
@@ -332,53 +380,20 @@ plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Prototype Properties  ----------------------------------------------
+# ----------------------------------- Export Prototype Properties  ---------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# get cluster centriods of prototypes
-cluster_centers_simple = scaler.inverse_transform(kmeans_simple.cluster_centers_)
-cluster_centers_complex = scaler.inverse_transform(kmeans_complex.cluster_centers_)
+# Get and export prototypes for 2 clusters (Simple Clustering)
+prototype_simple_df = get_prototypes_and_export(kmeans_simple.cluster_centers_, 2, 'simple')
 
-# create dataframes of the prototype features
-prototype_simple_df = np.exp(pd.DataFrame(cluster_centers_simple, columns=features))
-prototype_complex_df = np.exp(pd.DataFrame(cluster_centers_complex, columns=features))
+# Get and export prototypes for 8 clusters (Complex Clustering)
+prototype_complex_df = get_prototypes_and_export(kmeans_complex.cluster_centers_, 8, 'complex')
 
 # display properties of prototypes (centriods)
 print("Prototypes (Centriods of Clusters - Simple):")
 print(prototype_simple_df)
 print("Prototypes (Centriods of Clusters - Complex):")
 print(prototype_complex_df)
-
-# --------------------------------------------------------------------------------------------------------
-# ---------------------------- Export Clustered Data -----------------------------------------------------
-# --------------------------------------------------------------------------------------------------------
-
-# Add cluster labels to the DataFrame
-filtered_df['Cluster_2'] = labels_simple
-filtered_df[f'Cluster_{optimal_clusters_complex}'] = labels_complex
-
-# Export all data points with cluster labels
-filtered_df.to_csv('../berdo_data_files/exploratory-analysis-results/clustered_data.csv', index=False)
-print("Exported clustered data to clustered_data.csv")
-
-# --------------------------------------------------------------------------------------------------------
-# ---------------------------- Export Centroids for Prototypes -------------------------------------------
-# --------------------------------------------------------------------------------------------------------
-
-# Get centroids for both 2 and 8 clusters
-centroids_2_clusters = scaler.inverse_transform(kmeans_simple.cluster_centers_)
-centroids_8_clusters = scaler.inverse_transform(kmeans_complex.cluster_centers_)
-
-# Create DataFrames for the centroids
-centroids_2_df = pd.DataFrame(centroids_2_clusters, columns=features)
-centroids_2_df['Cluster'] = range(2)
-centroids_8_df = pd.DataFrame(centroids_8_clusters, columns=features)
-centroids_8_df['Cluster'] = range(optimal_clusters_complex)
-
-# Export centroids for prototypes
-centroids_2_df.to_csv('../berdo_data_files/exploratory-analysis-results/centroids_2_clusters.csv', index=False)
-centroids_8_df.to_csv(f'../berdo_data_files/exploratory-analysis-results/centroids_{optimal_clusters_complex}_clusters.csv', index=False)
-print(f"Exported centroids for prototypes to centroids_2_clusters.csv and centroids_{optimal_clusters_complex}_clusters.csv")
 
 # --------------------------------------------------------------------------------------------------------
 # ---------------------------- Cross-Reference with Original Dataset -------------------------------------
@@ -392,20 +407,20 @@ original_df = multifamily_df.copy()
 original_df.reset_index(drop=True, inplace=True)
 filtered_df.reset_index(drop=True, inplace=True)
 
+# Add cluster labels for both 2 and 8 clusters
+filtered_df['Cluster_2'] = labels_simple
+filtered_df['Cluster_8'] = labels_complex
+
 # Merge cluster labels back to the original dataset
 # This keeps all columns, including the ones not used in clustering
 original_df['Cluster_2'] = filtered_df['Cluster_2']
 original_df['Cluster_8'] = filtered_df['Cluster_8']
-
-# If PCA components are included for visualization
-original_df['PCA_1'] = filtered_df['PCA_1']
-original_df['PCA_2'] = filtered_df['PCA_2']
 
 # --------------------------------------------------------------------------------------------------------
 # ---------------------------- Export Cross-Referenced Data ----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # Export the full dataset with cluster labels and all original features
-original_df.to_csv('../berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
+original_df.to_csv('../data-files/berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
 print("Exported cross-referenced clustered data to cross_referenced_clustered_data.csv")
 
