@@ -106,6 +106,29 @@ print(f"Dataset Size After Filtering by GSF (>= {min_gsf} sq ft): {multifamily_d
 plt.figure(figsize=(20, 10))
 # log gross floor area distribution
 plt.subplot(1, 2, 1)
+sns.histplot(multifamily_df['Reported Gross Floor Area (Sq Ft)'], bins=30, kde=True)
+plt.title('Gross Floor Area Distribution')
+plt.xlabel('Log Gross Floor Area')
+plt.ylabel('Count')
+
+# Log Site EUI Distribution
+plt.subplot(1, 2, 2)
+sns.histplot(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'], bins=30, kde=True)
+plt.title('Site EUI Distribution')
+plt.xlabel('Log Site EUI')
+plt.ylabel('Count')
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+# log scale distributions
+plt.figure(figsize=(20, 10))
+# log gross floor area distribution
+plt.subplot(1, 2, 1)
 sns.histplot(np.log(multifamily_df['Reported Gross Floor Area (Sq Ft)']), bins=30, kde=True)
 plt.title('Log Scale: Gross Floor Area Distribution')
 plt.xlabel('Log Gross Floor Area')
@@ -420,7 +443,7 @@ original_df['Cluster_8'] = filtered_df['Cluster_8']
 # ---------------------------- Export Cross-Referenced Data ----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# Export the full dataset with cluster labels and all original features
-original_df.to_csv('../data-files/berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
+# # Export the full dataset with cluster labels and all original features
+# original_df.to_csv('../data-files/berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
 print("Exported cross-referenced clustered data to cross_referenced_clustered_data.csv")
 
