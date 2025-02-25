@@ -50,7 +50,7 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
     print(prototype_df)
 
     # Export to CSV
-    output_filename = f'../data-files/berdo_data_files/exploratory-analysis-results/{filename_prefix}_centroids_{cluster_count}_clusters.csv'
+    output_filename = f'../data-files/berdo_data_files/0-final-analysis/{optimal_clusters_complex}_clusters/{filename_prefix}_centroids_{cluster_count}_clusters.csv'
     prototype_df.to_csv(output_filename, index=False)
     print(f"Exported prototypes to {output_filename}")
 
@@ -62,7 +62,7 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
 # --------------------------------------------------------------------------------------------------------
 
 # File path to BERDO data & read in CSV
-file_path_berdo = '../data-files/berdo_data_files/BERDO_Data-2024.csv'
+file_path_berdo = '../data-files/berdo_data_files/BERDO_Data-2024-clean.csv.csv'
 df = pd.read_csv(file_path_berdo)
 
 # keep only multifamily
@@ -102,30 +102,57 @@ print(f"Dataset Size After Filtering by GSF (>= {min_gsf} sq ft): {multifamily_d
 # ----------------------------------- Visualize Distributions --------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# log scale distributions
+# GSF Distribution
 plt.figure(figsize=(20, 10))
 # log gross floor area distribution
 plt.subplot(1, 2, 1)
 sns.histplot(multifamily_df['Reported Gross Floor Area (Sq Ft)'], bins=30, kde=True)
 plt.title('Gross Floor Area Distribution')
-plt.xlabel('Log Gross Floor Area')
+plt.xlabel('Gross Floor Area (sf)')
 plt.ylabel('Count')
 
-# Log Site EUI Distribution
+# Site EUI Distribution
 plt.subplot(1, 2, 2)
 sns.histplot(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'], bins=30, kde=True)
 plt.title('Site EUI Distribution')
-plt.xlabel('Log Site EUI')
+plt.xlabel('Site EUI (kBtu/sf)')
 plt.ylabel('Count')
-
 plt.tight_layout()
 plt.show()
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_gsf-eui.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
+plt.figure(figsize=(20, 10))
+# Total Energy Usage Distribution
+plt.subplot(1, 2, 1)
+sns.histplot(multifamily_df['Total Site Energy Usage (kBtu)'], bins=30, kde=True)
+plt.title('Total Site Energy Usage Distribution')
+plt.xlabel('Log Total Site Energy Usage')
+plt.ylabel('Count')
+
+# Total Emissions Distribution
+plt.subplot(1, 2, 2)
+sns.histplot(multifamily_df['Estimated Total GHG Emissions (kgCO2e)'], bins=30, kde=True)
+plt.title('Log Scale: Total GHG Emissions Distribution')
+plt.xlabel('Log Total GHG Emissions')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.show()
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_energy-ghg.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
 
 
-
-
-
-# log scale distributions
+# Log GSF Distribution
 plt.figure(figsize=(20, 10))
 # log gross floor area distribution
 plt.subplot(1, 2, 1)
@@ -140,21 +167,27 @@ sns.histplot(np.log(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)']),
 plt.title('Log Scale: Site EUI Distribution')
 plt.xlabel('Log Site EUI')
 plt.ylabel('Count')
-
 plt.tight_layout()
 plt.show()
 
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_gsf-eui_log.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
 # log scale distributions
 plt.figure(figsize=(20, 10))
-
-# Log Gross Floor Area Distribution
+# Log Total Energy Usage Distribution
 plt.subplot(1, 2, 1)
 sns.histplot(np.log(multifamily_df['Total Site Energy Usage (kBtu)']), bins=30, kde=True)
 plt.title('Log Scale: Total Site Energy Usage Distribution')
 plt.xlabel('Log Total Site Energy Usage')
 plt.ylabel('Count')
 
-# Log Site EUI Distribution
+# Log Total Emissions Distribution
 plt.subplot(1, 2, 2)
 sns.histplot(np.log(multifamily_df['Estimated Total GHG Emissions (kgCO2e)']), bins=30, kde=True)
 plt.title('Log Scale: Total GHG Emissions Distribution')
@@ -163,6 +196,14 @@ plt.ylabel('Count')
 
 plt.tight_layout()
 plt.show()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_energy-ghg_log.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Log Transformation -------------------------------------------------
@@ -242,7 +283,7 @@ labels_simple = kmeans_simple.fit_predict(X)
 filtered_df.loc[:, 'Cluster_simple'] = labels_simple
 
 # perform K-Means Clustering with 8 clusters (prototypes)
-optimal_clusters_complex = 8
+optimal_clusters_complex = 3
 kmeans_complex = KMeans(n_clusters=optimal_clusters_complex, random_state=42)
 labels_complex = kmeans_complex.fit_predict(X)
 filtered_df.loc[:, 'Cluster_complex'] = labels_complex
@@ -310,6 +351,14 @@ plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
 
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_simple}_clusters/scatter_pca_{optimal_clusters_simple}_clusters.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
 # Complex Clustering
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
@@ -326,6 +375,14 @@ plt.ylabel('PCA Component 2')
 plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/scatter_pca_{optimal_clusters_complex}_clusters.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Log Cluster Visualizations -----------------------------------------
@@ -348,6 +405,14 @@ plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
 
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_simple}_clusters/scatter_gsf_vs_eui_{optimal_clusters_simple}_clusters_log.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
 # Complex Clustering Scatter Plot
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
@@ -364,6 +429,14 @@ plt.ylabel('Site EUI (kBtu/sf)')
 plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/scatter_gsf_vs_eui_{optimal_clusters_complex}_clusters_log.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Normal Cluster Visualizations --------------------------------------
@@ -386,6 +459,14 @@ plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
 
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_simple}_clusters/scatter_gsf_vs_eui_{optimal_clusters_simple}_clusters.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
 # Complex Clustering Scatter Plot
 plt.figure(figsize=(12, 8))
 sns.scatterplot(
@@ -402,6 +483,15 @@ plt.ylabel('Site EUI (kBtu/sf)')
 plt.legend(title='Cluster')
 plt.grid(True)
 plt.show()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/scatter_gsf_vs_eui_{optimal_clusters_complex}_clusters.jpg',
+    format='jpg',
+    dpi=300,
+    quality=90
+)
+
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Export Prototype Properties  ---------------------------------------
 # --------------------------------------------------------------------------------------------------------
@@ -410,12 +500,15 @@ plt.show()
 prototype_simple_df = get_prototypes_and_export(kmeans_simple.cluster_centers_, 2, 'simple')
 
 # Get and export prototypes for 8 clusters (Complex Clustering)
-prototype_complex_df = get_prototypes_and_export(kmeans_complex.cluster_centers_, 8, 'complex')
+prototype_complex_df = get_prototypes_and_export(
+    kmeans_complex.cluster_centers_,
+    optimal_clusters_complex,
+    'complex')
 
 # display properties of prototypes (centriods)
 print("Prototypes (Centriods of Clusters - Simple):")
 print(prototype_simple_df)
-print("Prototypes (Centriods of Clusters - Complex):")
+print(f"Prototypes (Centriods of Clusters - {optimal_clusters_complex}):")
 print(prototype_complex_df)
 
 # --------------------------------------------------------------------------------------------------------
@@ -432,18 +525,21 @@ filtered_df.reset_index(drop=True, inplace=True)
 
 # Add cluster labels for both 2 and 8 clusters
 filtered_df['Cluster_2'] = labels_simple
-filtered_df['Cluster_8'] = labels_complex
+filtered_df[f'Cluster_{optimal_clusters_complex}'] = labels_complex
 
 # Merge cluster labels back to the original dataset
 # This keeps all columns, including the ones not used in clustering
 original_df['Cluster_2'] = filtered_df['Cluster_2']
-original_df['Cluster_8'] = filtered_df['Cluster_8']
+original_df[f'Cluster_{optimal_clusters_complex}'] = filtered_df[f'Cluster_{optimal_clusters_complex}']
 
 # --------------------------------------------------------------------------------------------------------
 # ---------------------------- Export Cross-Referenced Data ----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# # Export the full dataset with cluster labels and all original features
-# original_df.to_csv('../data-files/berdo_data_files/exploratory-analysis-results/cross_referenced_clustered_data.csv', index=False)
+# Export the full dataset with cluster labels and all original features
+original_df.to_csv(
+    f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/context_data_{optimal_clusters_complex}.csv',
+    index=False
+)
 print("Exported cross-referenced clustered data to cross_referenced_clustered_data.csv")
 
