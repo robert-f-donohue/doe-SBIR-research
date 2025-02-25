@@ -2,10 +2,12 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from yellowbrick.cluster import SilhouetteVisualizer
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set_theme(style="whitegrid", palette="pastel")
 
 
@@ -50,9 +52,9 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
     print(prototype_df)
 
     # Export to CSV
-    output_filename = f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/{filename_prefix}_centroids_{cluster_count}_clusters.csv'
-    # prototype_df.to_csv(output_filename, index=False)
-    print(f"Exported prototypes to {output_filename}")
+    output_filename = f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/{filename_prefix}_centroids_{cluster_count}_clusters.xlsx'
+    # prototype_df.to_excel(output_filename, index=False)
+    print(f"Exported prototypes to {output_filename}.xlsx")
 
     return prototype_df
 
@@ -258,7 +260,7 @@ X = scaler.fit_transform(filtered_df[log_features])
 
 # determine the optimal number of clusters using Elbow Method
 sse = []
-range_n_clusters = range(1, 11)
+range_n_clusters = range(2, 9)
 for k in range_n_clusters:
     km = KMeans(n_clusters=k, random_state=42)
     km.fit(X)
@@ -275,6 +277,41 @@ plt.grid(True)
 # plt.show()
 
 # --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Silhouette Analysis -----------------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Create subplots: 2 rows, 3 columns
+fig, axs = plt.subplots(2, 3, figsize=(24, 16), sharey=True)
+fig.suptitle('Silhouette Analysis for KMeans Clustering', fontsize=24)
+
+# Flatten the axs array for easier iteration
+axs = axs.flatten()
+
+# Loop through the number of clusters and create silhouette plots
+for ax, n_clusters in zip(axs, range_n_clusters):
+    # Initialize the KMeans model
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+
+    # Create SilhouetteVisualizer
+    visualizer = SilhouetteVisualizer(kmeans, colors='coolwarm', ax=ax)
+    visualizer.fit(X)
+    visualizer.finalize()
+    ax.set_title(f'{n_clusters} Clusters')
+
+# Remove any empty subplots (if the number of clusters is not a multiple of the grid)
+for i in range(len(range_n_clusters), len(axs)):
+    fig.delaxes(axs[i])
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Adjust layout to fit the title
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/0-summary/silhouette_scores.jpg',
+    format='jpg',
+    dpi=300,
+)
+plt.show()
+
+# --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Cluster Analysis - KMeans ------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
@@ -285,7 +322,7 @@ labels_simple = kmeans_simple.fit_predict(X)
 filtered_df.loc[:, 'Cluster_simple'] = labels_simple
 
 # perform K-Means Clustering with 8 clusters (prototypes)
-optimal_clusters_complex = 3
+optimal_clusters_complex = 8
 kmeans_complex = KMeans(n_clusters=optimal_clusters_complex, random_state=42)
 labels_complex = kmeans_complex.fit_predict(X)
 filtered_df.loc[:, 'Cluster_complex'] = labels_complex
@@ -533,9 +570,9 @@ original_df[f'Cluster_{optimal_clusters_complex}'] = filtered_df[f'Cluster_{opti
 # --------------------------------------------------------------------------------------------------------
 
 # Export the full dataset with cluster labels and all original features
-# original_df.to_csv(
-#     f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/context_data_{optimal_clusters_complex}.csv',
+# original_df.to_excel(
+#     f'../data-files/0-final-analysis/{optimal_clusters_complex}_clusters/context_data_{optimal_clusters_complex}.xlsx',
 #     index=False
 # )
-print("Exported cross-referenced clustered data to cross_referenced_clustered_data.csv")
+print("Exported cross-referenced clustered data to cross_referenced_clustered_data.xlsx")
 
