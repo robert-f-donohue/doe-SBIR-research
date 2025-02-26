@@ -16,11 +16,12 @@ sns.set_theme(style="whitegrid", palette="pastel")
 # --------------------------------------------------------------------------------------------------------
 
 # List of features that were log-transformed before clustering
-log_transformed_features = [
+features = [
     'Reported Gross Floor Area (Sq Ft)',
     'Site EUI (Energy Use Intensity kBtu/ft2)',
     'Total Site Energy Usage (kBtu)',
-    'Estimated Total GHG Emissions (kgCO2e)'
+    'Estimated Total GHG Emissions (kgCO2e)',
+    'Percentage Electrification'
 ]
 
 
@@ -38,7 +39,7 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
 
     # Apply inverse log transform (exp) BEFORE creating the DataFrame
     for i, feature in enumerate(features):
-        if feature in log_transformed_features:
+        if feature in features:
             inverse_transformed[:, i] = np.exp(inverse_transformed[:, i])
 
     # Create DataFrame for centroids
@@ -63,20 +64,14 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
 # ----------------------------------- Setting Up Analysis ------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# File path to BERDO data & read in CSV
-file_path_berdo = '../data-files/berdo_data_files/BERDO_Data-2024-clean.csv'
-df = pd.read_csv(file_path_berdo)
+# File path to 2024 BERDO data
+file_path_berdo_2024 = '../data-files/berdo_data_files/BERDO_Data-2024-features.csv'
+
+# create DataFrames for 2021 and 2024 data
+df_2024 = pd.read_csv(file_path_berdo_2024)
 
 # keep only multifamily
-multifamily_df = df[df['Largest Property Type'] == 'Multifamily Housing']
-
-# relevant features for clustering
-features = [
-    'Reported Gross Floor Area (Sq Ft)',
-    'Site EUI (Energy Use Intensity kBtu/ft2)',
-    'Total Site Energy Usage (kBtu)',
-    'Estimated Total GHG Emissions (kgCO2e)'
-]
+multifamily_df = df_2024[df_2024['Largest Property Type'] == 'Multifamily Housing']
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Data Cleaning ------------------------------------------------------
@@ -134,29 +129,37 @@ plt.tight_layout()
 # )
 # plt.show()
 
-plt.figure(figsize=(20, 10))
+plt.figure(figsize=(30, 10))
 # Total Energy Usage Distribution
-plt.subplot(1, 2, 1)
+plt.subplot(1, 3, 1)
 sns.histplot(multifamily_df['Total Site Energy Usage (kBtu)'], bins=30, kde=True)
 plt.title('Total Site Energy Usage Distribution')
-plt.xlabel('Log Total Site Energy Usage')
+plt.xlabel('Total Site Energy Usage')
 plt.ylabel('Count')
 
 # Total Emissions Distribution
-plt.subplot(1, 2, 2)
+plt.subplot(1, 3, 2)
 sns.histplot(multifamily_df['Estimated Total GHG Emissions (kgCO2e)'], bins=30, kde=True)
-plt.title('Log Scale: Total GHG Emissions Distribution')
-plt.xlabel('Log Total GHG Emissions')
+plt.title('Total GHG Emissions Distribution')
+plt.xlabel('Total GHG Emissions')
 plt.ylabel('Count')
 plt.tight_layout()
 
-# # save figure to correct file path
-# plt.savefig(
-#     f'../data-files/0-final-analysis/hist_energy-ghg.jpg',
-#     format='jpg',
-#     dpi=300,
-# )
-# plt.show()
+# Percent Electrification Distribution
+plt.subplot(1, 3, 3)
+sns.histplot(multifamily_df['Percentage Electrification'], bins=30, kde=True)
+plt.title('Percentage Electrification Distribution')
+plt.xlabel('% Electrification')
+plt.ylabel('Count')
+plt.tight_layout()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_energy-ghg.jpg',
+    format='jpg',
+    dpi=300,
+)
+plt.show()
 
 
 # Log GSF Distribution
@@ -185,29 +188,37 @@ plt.tight_layout()
 # plt.show()
 
 # log scale distributions
-plt.figure(figsize=(20, 10))
+plt.figure(figsize=(30, 10))
 # Log Total Energy Usage Distribution
-plt.subplot(1, 2, 1)
+plt.subplot(1, 3, 1)
 sns.histplot(np.log(multifamily_df['Total Site Energy Usage (kBtu)']), bins=30, kde=True)
 plt.title('Log Scale: Total Site Energy Usage Distribution')
 plt.xlabel('Log Total Site Energy Usage')
 plt.ylabel('Count')
 
 # Log Total Emissions Distribution
-plt.subplot(1, 2, 2)
+plt.subplot(1, 3, 2)
 sns.histplot(np.log(multifamily_df['Estimated Total GHG Emissions (kgCO2e)']), bins=30, kde=True)
 plt.title('Log Scale: Total GHG Emissions Distribution')
 plt.xlabel('Log Total GHG Emissions')
 plt.ylabel('Count')
 plt.tight_layout()
 
-# # save figure to correct file path
-# plt.savefig(
-#     f'../data-files/0-final-analysis/hist_energy-ghg_log.jpg',
-#     format='jpg',
-#     dpi=300,
-# )
-# plt.show()
+# Log Percent Electrification Distribution
+plt.subplot(1, 3, 3)
+sns.histplot(np.log(multifamily_df['Percentage Electrification']), bins=30, kde=True)
+plt.title('Log Scale: Percentage Electrification Distribution')
+plt.xlabel('Log % Electrification')
+plt.ylabel('Count')
+plt.tight_layout()
+
+# save figure to correct file path
+plt.savefig(
+    f'../data-files/0-final-analysis/hist_energy-ghg_log.jpg',
+    format='jpg',
+    dpi=300,
+)
+plt.show()
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Log Transformation -------------------------------------------------
@@ -219,6 +230,7 @@ cleaned_df['Log GSF'] = np.log(cleaned_df['Reported Gross Floor Area (Sq Ft)'])
 cleaned_df['Log EUI'] = np.log(cleaned_df['Site EUI (Energy Use Intensity kBtu/ft2)'])
 cleaned_df['Log Total Site Energy'] = np.log(cleaned_df['Total Site Energy Usage (kBtu)'])
 cleaned_df['Log GHG Emissions'] = np.log(cleaned_df['Estimated Total GHG Emissions (kgCO2e)'])
+cleaned_df['Log Electrification'] = np.log(cleaned_df['Percentage Electrification'])
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Percentile-based Filtering -----------------------------------------
@@ -309,7 +321,7 @@ plt.savefig(
     format='jpg',
     dpi=300,
 )
-plt.show()
+# plt.show()
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Cluster Analysis - KMeans ------------------------------------------
@@ -524,6 +536,75 @@ plt.grid(True)
 #     dpi=300,
 # )
 # plt.show()
+
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Violin Plot Visualizations -----------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# initialize list to store statistics
+statistics_list = []
+
+# Choose the cluster column
+cluster_column = 'Cluster_complex'
+
+# Create subplots
+fig, axs = plt.subplots(2, 2, figsize=(24, 16))
+fig.suptitle('Distribution of Metrics within Each Cluster', fontsize=24)
+axs = axs.flatten()
+
+# Loop through metrics and create a violin plot for each
+for ax, metric in zip(axs, features):
+    sns.violinplot(
+        data=filtered_df,
+        x=cluster_column,
+        y=metric,
+        hue='Cluster_complex',
+        palette='Set2',
+        ax=ax
+    )
+    # calculate and annotate statistics
+    for cluster in sorted(filtered_df[cluster_column].unique()):
+        # filter data for the cluster
+        cluster_data = filtered_df[filtered_df[cluster_column] == cluster][metric]
+
+        # calculate statistics
+        min_val = cluster_data.min()
+        max_val = cluster_data.max()
+        median_val = cluster_data.median()
+        q1 = cluster_data.quantile(0.25)
+        q3 = cluster_data.quantile(0.75)
+        mean_val = cluster_data.mean()
+        std_val = cluster_data.std()
+
+        # annotate statistics on plot
+        ax.text(cluster, median_val, 'Median Value: ' + str(median_val),
+                color='black', ha='center', va='center', fontsize=10)
+        ax.text(cluster, q1, 'Q1: ' + str(q1),
+                color='blue', ha='center', va='center', fontsize=9)
+        ax.text(cluster, q3, 'Q3: ' + str(q3),
+                color='blue', ha='center', va='center', fontsize=9)
+
+        # store statistics for export
+        statistics_list.append({
+            'Metric': metric,
+            'Cluster': cluster,
+            'Min': min_val,
+            'Max': max_val,
+            'Median': median_val,
+            'Q1': q1,
+            'Q3': q3,
+            'Mean': mean_val,
+            'Std Dev': std_val,
+        })
+
+    # set titles and labels
+    ax.set_title(metric)
+    ax.set_xlabel('Cluster')
+    ax.set_ylabel(metric)
+    ax.grid(True)
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Adjust layout for title
+plt.show()
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Export Prototype Properties  ---------------------------------------
