@@ -5,9 +5,9 @@ from sklearn.cluster import KMeans
 from yellowbrick.cluster import SilhouetteVisualizer
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 sns.set_theme(style="whitegrid", palette="pastel")
 
 
@@ -65,172 +65,31 @@ def get_prototypes_and_export(centers, cluster_count, filename_prefix):
 # --------------------------------------------------------------------------------------------------------
 
 # File path to 2024 BERDO data
-file_path_berdo_2024 = '../data-files/berdo_data_files/BERDO_Data-2024-features.csv'
+file_path_multifamily_2024 = '../data-files/berdo_data_files/BERDO_Data-2024-multifamily.csv'
 
 # create DataFrames for 2021 and 2024 data
-df_2024 = pd.read_csv(file_path_berdo_2024)
+df_2024 = pd.read_csv(file_path_multifamily_2024)
 
-# keep only multifamily
-multifamily_df = df_2024[df_2024['Largest Property Type'] == 'Multifamily Housing']
+# Keep clean copy for transformation
+cleaned_df = df_2024.copy()
+
+# Create dictionary to store Box-Cox lambda values for each feature
+boxcox_lambdas = {}
 
 # --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Data Cleaning ------------------------------------------------------
+# ----------------------------------- Box-Cox Transformation -------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# filter out bad data
-multifamily_df = multifamily_df.dropna(subset=features)
-
-# convert columns to numeric
+# Apply Box-Cox Transformation for each feature
 for feature in features:
-    multifamily_df[feature] = pd.to_numeric(multifamily_df[feature], errors='coerce')
+    # ensure all are positive
+    cleaned_df = cleaned_df[cleaned_df[feature] > 0]
 
-# drop any rows that became NaN after conversion
-multifamily_df = multifamily_df.dropna(subset=features)
+    # apply transformation and store lambda values
+    transformed_data, lambda_value = stats.boxcox(cleaned_df[feature])
+    cleaned_df[f'BoxCox {feature}'] = transformed_data
+    boxcox_lambdas[feature] = lambda_value
 
-print(f"Original Dataset Size: {multifamily_df.shape[0]}")
-
-# drop any rows with GSF below 20,000 SF
-min_gsf = 20000
-multifamily_df = multifamily_df[multifamily_df['Reported Gross Floor Area (Sq Ft)'] >= min_gsf]
-
-print(f"Dataset Size After Filtering by GSF (>= {min_gsf} sq ft): {multifamily_df.shape[0]}")
-
-# drop any rows with EUI below 15 kBtu/sf
-min_eui = 15.0
-multifamily_df = multifamily_df[multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'] >= min_eui]
-
-print(f"Dataset Size After Filtering by EUI (>= {min_eui} sq ft): {multifamily_df.shape[0]}")
-
-# --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Visualize Distributions --------------------------------------------
-# --------------------------------------------------------------------------------------------------------
-
-# GSF Distribution
-plt.figure(figsize=(20, 10))
-# log gross floor area distribution
-plt.subplot(1, 2, 1)
-sns.histplot(multifamily_df['Reported Gross Floor Area (Sq Ft)'], bins=30, kde=True)
-plt.title('Gross Floor Area Distribution')
-plt.xlabel('Gross Floor Area (sf)')
-plt.ylabel('Count')
-
-# Site EUI Distribution
-plt.subplot(1, 2, 2)
-sns.histplot(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'], bins=30, kde=True)
-plt.title('Site EUI Distribution')
-plt.xlabel('Site EUI (kBtu/sf)')
-plt.ylabel('Count')
-plt.tight_layout()
-# # save figure to correct file path
-# plt.savefig(
-#     f'../data-files/0-final-analysis/hist_gsf-eui.jpg',
-#     format='jpg',
-#     dpi=300,
-# )
-# plt.show()
-
-plt.figure(figsize=(30, 10))
-# Total Energy Usage Distribution
-plt.subplot(1, 3, 1)
-sns.histplot(multifamily_df['Total Site Energy Usage (kBtu)'], bins=30, kde=True)
-plt.title('Total Site Energy Usage Distribution')
-plt.xlabel('Total Site Energy Usage')
-plt.ylabel('Count')
-
-# Total Emissions Distribution
-plt.subplot(1, 3, 2)
-sns.histplot(multifamily_df['Estimated Total GHG Emissions (kgCO2e)'], bins=30, kde=True)
-plt.title('Total GHG Emissions Distribution')
-plt.xlabel('Total GHG Emissions')
-plt.ylabel('Count')
-plt.tight_layout()
-
-# Percent Electrification Distribution
-plt.subplot(1, 3, 3)
-sns.histplot(multifamily_df['Percentage Electrification'], bins=30, kde=True)
-plt.title('Percentage Electrification Distribution')
-plt.xlabel('% Electrification')
-plt.ylabel('Count')
-plt.tight_layout()
-
-# save figure to correct file path
-plt.savefig(
-    f'../data-files/0-final-analysis/hist_energy-ghg.jpg',
-    format='jpg',
-    dpi=300,
-)
-plt.show()
-
-
-# Log GSF Distribution
-plt.figure(figsize=(20, 10))
-# log gross floor area distribution
-plt.subplot(1, 2, 1)
-sns.histplot(np.log(multifamily_df['Reported Gross Floor Area (Sq Ft)']), bins=30, kde=True)
-plt.title('Log Scale: Gross Floor Area Distribution')
-plt.xlabel('Log Gross Floor Area')
-plt.ylabel('Count')
-
-# Log Site EUI Distribution
-plt.subplot(1, 2, 2)
-sns.histplot(np.log(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)']), bins=30, kde=True)
-plt.title('Log Scale: Site EUI Distribution')
-plt.xlabel('Log Site EUI')
-plt.ylabel('Count')
-plt.tight_layout()
-
-# # save figure to correct file path
-# plt.savefig(
-#     f'../data-files/0-final-analysis/hist_gsf-eui_log.jpg',
-#     format='jpg',
-#     dpi=300,
-# )
-# plt.show()
-
-# log scale distributions
-plt.figure(figsize=(30, 10))
-# Log Total Energy Usage Distribution
-plt.subplot(1, 3, 1)
-sns.histplot(np.log(multifamily_df['Total Site Energy Usage (kBtu)']), bins=30, kde=True)
-plt.title('Log Scale: Total Site Energy Usage Distribution')
-plt.xlabel('Log Total Site Energy Usage')
-plt.ylabel('Count')
-
-# Log Total Emissions Distribution
-plt.subplot(1, 3, 2)
-sns.histplot(np.log(multifamily_df['Estimated Total GHG Emissions (kgCO2e)']), bins=30, kde=True)
-plt.title('Log Scale: Total GHG Emissions Distribution')
-plt.xlabel('Log Total GHG Emissions')
-plt.ylabel('Count')
-plt.tight_layout()
-
-# Log Percent Electrification Distribution
-plt.subplot(1, 3, 3)
-sns.histplot(np.log(multifamily_df['Percentage Electrification']), bins=30, kde=True)
-plt.title('Log Scale: Percentage Electrification Distribution')
-plt.xlabel('Log % Electrification')
-plt.ylabel('Count')
-plt.tight_layout()
-
-# save figure to correct file path
-plt.savefig(
-    f'../data-files/0-final-analysis/hist_energy-ghg_log.jpg',
-    format='jpg',
-    dpi=300,
-)
-plt.show()
-
-# --------------------------------------------------------------------------------------------------------
-# ----------------------------------- Log Transformation -------------------------------------------------
-# --------------------------------------------------------------------------------------------------------
-
-# Log Transformation for GSF and EUI
-cleaned_df = multifamily_df.copy()  # Keep a clean copy for transformations
-cleaned_df['Log GSF'] = np.log(cleaned_df['Reported Gross Floor Area (Sq Ft)'])
-cleaned_df['Log EUI'] = np.log(cleaned_df['Site EUI (Energy Use Intensity kBtu/ft2)'])
-cleaned_df['Log Total Site Energy'] = np.log(cleaned_df['Total Site Energy Usage (kBtu)'])
-cleaned_df['Log GHG Emissions'] = np.log(cleaned_df['Estimated Total GHG Emissions (kgCO2e)'])
-cleaned_df['Log Electrification'] = np.log(cleaned_df['Percentage Electrification'])
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Percentile-based Filtering -----------------------------------------

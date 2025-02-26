@@ -88,20 +88,20 @@ def analyze_distribution(df, feature):
         print(f'{name} - Skewness: {skewness}')
         print(f'{name} - Kurtosis: {kurtosis}')
 
-    # Evaluate best fit distributions for original data
-    dist_names = ['norm', 'lognorm', 'gamma', 'beta', 'expon', 'uniform']
-    results = {}
-    for dist_name in dist_names:
-        dist = getattr(stats, dist_name)
-        param = dist.fit(df[feature])
-        ks_stat, p_value = stats.kstest(df[feature], dist_name, args=param)
-        results[dist_name] = p_value
-
-    # Get sorted results
-    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
-    print(f'Best fit distribution for {feature}:')
-    for dist_name, p_value in sorted_results:
-        print(f'{dist_name}: p-value = {p_value}')
+    # # Evaluate best fit distributions for original data
+    # dist_names = ['norm', 'lognorm', 'gamma', 'beta', 'expon', 'uniform']
+    # results = {}
+    # for dist_name in dist_names:
+    #     dist = getattr(stats, dist_name)
+    #     param = dist.fit(df[feature])
+    #     ks_stat, p_value = stats.kstest(df[feature], dist_name, args=param)
+    #     results[dist_name] = p_value
+    #
+    # # Get sorted results
+    # sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
+    # print(f'Best fit distribution for {feature}:')
+    # for dist_name, p_value in sorted_results:
+    #     print(f'{dist_name}: p-value = {p_value}')
 
 
 
@@ -173,9 +173,27 @@ print(f"Size of Multifamily Housing Dataset w/o EUI < 15 kBtu/sf: {multifamily_d
 # ensure Site EUI remains a float value
 multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'] = multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'].astype(float)
 
+# --------------------------------------------------------------------------------------------------------
+# ----------------------------------- Percentile-based Filtering -----------------------------------------
+# --------------------------------------------------------------------------------------------------------
+
+# Percentile-based Filtering
+gsf_upper_threshold = np.percentile(multifamily_df['Reported Gross Floor Area (Sq Ft)'], 99)                  # Top 1% for GSF
+eui_upper_threshold = np.percentile(multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'], 98)           # Top 2% for EUI
+site_energy_upper_threshold = np.percentile(multifamily_df['Total Site Energy Usage (kBtu)'], 98)             # Top 2% for Site Energy Usage
+ghg_emissions_upper_threshold = np.percentile(multifamily_df['Estimated Total GHG Emissions (kgCO2e)'], 98)   # Top 2% for GHG Emissions
+
+# Filter out extreme values based on percentiles
+filtered_df = multifamily_df[
+    (multifamily_df['Reported Gross Floor Area (Sq Ft)'] <= gsf_upper_threshold) &
+    (multifamily_df['Site EUI (Energy Use Intensity kBtu/ft2)'] <= eui_upper_threshold) &
+    (multifamily_df['Total Site Energy Usage (kBtu)'] <= site_energy_upper_threshold) &
+    (multifamily_df['Estimated Total GHG Emissions (kgCO2e)'] <= ghg_emissions_upper_threshold)
+].copy()
+
 # export multifamily data to avoid splitting data twice
 # export to csv
-multifamily_df.to_csv('../data-files/berdo_data_files/BERDO_Data-2024-multifamily.csv', index=False)
+filtered_df.to_csv('../data-files/berdo_data_files/BERDO_Data-2024-multifamily.csv', index=False)
 
 
 # --------------------------------------------------------------------------------------------------------
