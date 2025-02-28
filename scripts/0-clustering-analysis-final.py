@@ -21,7 +21,8 @@ features = [
     'Site EUI (Energy Use Intensity kBtu/ft2)',
     'Total Site Energy Usage (kBtu)',
     'Estimated Total GHG Emissions (kgCO2e)',
-    # 'Estimated Carbon Emissions Intensity (kg CO2e/sf)'
+    # 'Estimated Carbon Emissions Intensity (kg CO2e/sf)',
+
 ]
 
 # Normalize the Log-Transformed Data

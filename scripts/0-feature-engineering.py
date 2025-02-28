@@ -187,7 +187,7 @@ corr_df = filtered_df.copy()
 columns_to_remove = [
     '_id', 'BERDO ID', 'Tax Parcel ID', 'Property Owner Name', 'Building Address', 'Building Address City',
     'Building Address Zip  Code', 'Geospatial Address', 'Geospatial Address.1', 'Parcel Address', 'Parcel Address City',
-    'Parcel Address Zip Code', 'Reported Enclosed Parking Area (Sq Ft)', 'Largest Property Type', 'All Property Types and GFAs',
+     'Reported Enclosed Parking Area (Sq Ft)', 'Largest Property Type', 'All Property Types and GFAs',
     'District Hot Water Usage (kBtu)', 'District Hot Water Emissions (kgCO2e)', 'District Chilled Water Usage (kBtu)',
     'District Chilled Water Emissions (kgCO2e)', 'Fuel Oil 5 and 6 Usage (kBtu)', 'Fuel Oil 5 and 6 Emissions (kgCO2e)',
     'Kerosene Usage (kBtu)', 'Kerosene Emissions (kgCO2e)', 'Compliance Status', 'Notes', 'Corresponding Campus ID',
