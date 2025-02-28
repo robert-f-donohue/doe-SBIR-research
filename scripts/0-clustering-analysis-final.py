@@ -21,7 +21,16 @@ features = [
     'Site EUI (Energy Use Intensity kBtu/ft2)',
     'Total Site Energy Usage (kBtu)',
     'Estimated Total GHG Emissions (kgCO2e)',
-    'Estimated Carbon Emissions Intensity (kg CO2e/sf)'
+    # 'Estimated Carbon Emissions Intensity (kg CO2e/sf)'
+]
+
+# Normalize the Log-Transformed Data
+log_features = [
+    'Log GSF',
+    'Log EUI',
+    'Log Total Site Energy',
+    'Log GHG Emissions',
+    # 'Log CEI'
 ]
 
 
@@ -79,9 +88,6 @@ print(f"Original Multifamily Dataset Size: {cleaned_df.shape[0]}")
 # ---------------------------------- Normalization for Log-Transformed Data ------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# Normalize the Log-Transformed Data
-log_features = ['Log GSF', 'Log EUI', 'Log Total Site Energy', 'Log GHG Emissions', 'Log CEI']
-
 # Drop NaN values after Box Cox transformation
 cleaned_df = cleaned_df.dropna(subset=log_features)
 print(f"Dataset Size After Dropping NaN Values: {cleaned_df.shape[0]}")
@@ -97,26 +103,26 @@ X = scaler.fit_transform(cleaned_df[log_features])
 # # determine the optimal number of clusters using Elbow Method
 sse = []
 range_n_clusters = range(2, 9)
-# for k in range_n_clusters:
-#     km = KMeans(n_clusters=k, random_state=42)
-#     km.fit(X)
-#     sse.append(km.inertia_)
-#
-# # plot elbow curve
-# # create figure
-# plt.figure(figsize=(12, 8))
-# plt.plot(range_n_clusters, sse, marker='o')
-# plt.title('Elbow Method for Optimal Clusters')
-# plt.xlabel('Number of Clusters')
-# plt.ylabel('SSE (Sum of Squared Errors')
-# plt.grid(True)
+for k in range_n_clusters:
+    km = KMeans(n_clusters=k, random_state=42)
+    km.fit(X)
+    sse.append(km.inertia_)
+
+# plot elbow curve
+# create figure
+plt.figure(figsize=(12, 8))
+plt.plot(range_n_clusters, sse, marker='o')
+plt.title('Elbow Method for Optimal Clusters')
+plt.xlabel('Number of Clusters')
+plt.ylabel('SSE (Sum of Squared Errors')
+plt.grid(True)
 # plt.show()
 
 # --------------------------------------------------------------------------------------------------------
 # ----------------------------------- Silhouette Analysis -----------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
-# Create subplots: 2 rows, 3 columns
+# Create subplots: 2 rows, 4 columns
 fig, axs = plt.subplots(2, 4, figsize=(30, 18), sharey=True)
 fig.suptitle('Silhouette Analysis for KMeans Clustering', fontsize=24)
 
@@ -141,11 +147,11 @@ for i in range(len(range_n_clusters), len(axs)):
 plt.tight_layout(rect=(0.0, 0.03, 1.0, 0.95))  # Adjust layout to fit the title
 
 # save figure to correct file path
-plt.savefig(
-    f'../data-files/0-final-analysis/0-summary/silhouette_scores.jpg',
-    format='jpg',
-    dpi=300
-)
+# plt.savefig(
+#     f'../data-files/0-final-analysis/0-summary/silhouette_scores.jpg',
+#     format='jpg',
+#     dpi=300
+# )
 # plt.show()
 
 # --------------------------------------------------------------------------------------------------------
@@ -195,8 +201,8 @@ print(f"Calinski-Harabasz Index: {ch_index_complex}")
 # --------------------------------------------------------------------------------------------------------
 
 # visualize clusters using PCA (2D)
-pca_simple = PCA(n_components=4)
-pca_complex = PCA(n_components=4)
+pca_simple = PCA(n_components=2)
+pca_complex = PCA(n_components=2)
 pca_components_simple = pca_simple.fit_transform(X)
 pca_components_complex = pca_complex.fit_transform(X)
 
